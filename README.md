@@ -26,13 +26,29 @@ to build
 `make build-wasm`
 
 to dev
+
 ```bash
 make dev
 ```
 
 start server
+
 ```bash
 cd ./cmd/server
 go run main.go
+```
+
+run tests locally
+
+```bash
+cd ./wasm/toSql
+go test
+```
+
+run tests and update snapshots
+
+```bash
+cd ./wasm/toSql
+UPDATE_SNAPS=true go test
 ```
 
