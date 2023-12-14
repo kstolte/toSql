@@ -42,7 +42,7 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	r.Comment = '#'
 
 	hasHeaderLine := parseConfig.FirstLineIsHeader
-	createStatement := "DROP TABLE IF EXISTS #ttbl; GO\n CREATE TABLE #ttbl("
+	createStatement := "DROP TABLE IF EXISTS #ttbl;\nGO\nCREATE TABLE #ttbl("
 	var columnNames []string
 
 	if hasHeaderLine {
