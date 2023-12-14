@@ -1,0 +1,86 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="wasm_exec.js"></script>
+  <script>
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("toSql.wasm"), go.importObject).then((result) => {
+      go.run(result.instance);
+    });
+  </script>
+  <title>* To SQL</title>
+</head>
+
+<body>
+  <div>
+    <h1 class="text-2xl">To SQL</h1>
+    <h2 class="text-xl">About</h2>
+    <p class="text-base">To SQL is a utility for taking tabulated data sets And easily transforming them into a temp
+      table for ingestion into a SQL server. This can be used to help troubleshoot, or perform various-based comparisons
+      of data sets. This is meant to replace the arguers task of creating a well crafted Excel content function, which
+      can be a bit frustrating when counting all those commas, both function argument separators and inside the insert
+      statement.</p>
+    <p class="text-base">DISCLAIMER: This is a work in progress and has not been tested entirely. Use at your own risk.
+    </p>
+    <p class="text-base">Always check the sql output before executing on an actual server. Sql Injection is a Thing.</p>
+    <h2 class="text-xl">Known Issues</h2>
+    <ul class="list-disc list-inside">
+      <li>Errant &apos; values in the input field - will be mitigated by replacing with an escaped version.</li>
+      <li>No type checking and trying to establish what the appropriate datatype is, right now every thing is a
+        varchar(512)</li>
+      <li>There is no truncation of values to the 512 mark so if there are 1000 characters in a field, that column may
+        have to be adjusted to a higher varchar value - will be mitigating in the future.</li>
+    </ul>
+  </div>
+  <div>
+    <div class="form-control">
+      <label for="inputType" class="label max-w-lg">
+        <span class="label-text">Input Type</span>
+        <select id="inputType" name="inputType" class="select select-primary w-full max-w-md">
+          <option value="excel">Excel</option>
+          <option value="sheets">Google Sheets</option>
+          <option value="numbers">Numbers</option>
+          <option value="csv">Comma Separated Values (CSV)</option>
+          <option value="tsv">Tab Separated Values (TSV)</option>
+          <option value="scsv">SemiColon Separated Values</option>
+        </select>
+      </label>
+      <br />
+
+      <label class="label max-w-md" for="chkHeaders">
+        <span class="label-text">First Line Is Headers</span>
+        <input class="checkbox checkbox-primary" id="chkHeaders" name="chkHeaders" type="checkbox">
+      </label>
+    </div>
+
+  </div>
+
+  <label for="textdatainput">Data Input</label><br />
+  <textarea id="textdatainput" name="textdatainput" cols="100" rows="10" class="textarea textarea-primary font-mono"
+    spellcheck="false"></textarea><br />
+  <button class="btn btn-primary" id="button" name="button"
+    onclick="processTextDataInput(textdatainput.value, inputType.value, chkHeaders.checked)">
+    GIVE ME SQL!</button>
+  <br />
+  <label for="sqlOutput">SQLized Output</label><br />
+  <textarea id="sqlOutput" name="sqlOutput" cols="100" rows="20" class="textarea textarea-primary font-mono"
+    spellcheck="false"></textarea>
+</body>
+<script>
+  var processTextDataInput = function (input, inputType, hasHeaders) {
+    var delimiter = '\t'
+    if (inputType === 'csv')
+      delimiter = ','
+    if (inputType === 'scsv')
+      delimiter = ';'
+
+    sqlOutput.value = "processing..."
+    var resp = tsvToSQLImport(input, delimiter, hasHeaders)
+    sqlOutput.value = resp !== undefined && resp.length > 1 ? resp : "probable error encountered, refresh page and check for blank input"
+  }
+</script>
+</html>
