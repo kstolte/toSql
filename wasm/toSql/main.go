@@ -16,12 +16,16 @@ func timeTrack(start time.Time, name string) {
 	log.Printf("%s took %s", name, elapsed)
 }
 
-func createInsertLine(recordRow *[]string) string {
+func createInsertLine(recordRow *[]string, maxFieldLen *[]int, tblName *string) string {
 	var sanitizedRowValues []string
-	for _, v := range *recordRow {
-		sanitizedRowValues = append(sanitizedRowValues, strings.ReplaceAll(v, "'", "''"))
+	for i, v := range *recordRow {
+		if (*maxFieldLen)[i] < len(v) {
+			(*maxFieldLen)[i] = len(v)
+		}
+		starSan := strings.ReplaceAll(v, "'", "''")
+		sanitizedRowValues = append(sanitizedRowValues, starSan)
 	}
-	return "INSERT INTO #ttbl SELECT '" + strings.Join(sanitizedRowValues, "','") + "'"
+	return "INSERT INTO #" + *tblName + " SELECT '" + strings.Join(sanitizedRowValues, "','") + "'"
 }
 
 type ParseConfig struct {
@@ -33,7 +37,7 @@ type ParseConfig struct {
 // Take a input and format it into a CSV document
 func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	defer timeTrack(time.Now(), "CsvToSql")
-
+	tableName := "ttbl"
 	var ret []string
 	// ret = append(ret, "SET NOCOUNT ON")
 
@@ -42,7 +46,7 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	r.Comment = '#'
 
 	hasHeaderLine := parseConfig.FirstLineIsHeader
-	createStatement := "DROP TABLE IF EXISTS #ttbl;\nGO\nCREATE TABLE #ttbl("
+	createStatement := "DROP TABLE IF EXISTS #" + tableName + ";\nGO\nCREATE TABLE #ttbl("
 	var columnNames []string
 
 	if hasHeaderLine {
@@ -51,21 +55,25 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 			log.Fatal(headerReadErr)
 		}
 		for _, v := range headerRecords {
-			columnNames = append(columnNames, "["+v+"] VARCHAR(512)")
+			columnNames = append(columnNames, "["+v+"] ")
 		}
 	}
+	var maxFieldLen []int
+
 	if !hasHeaderLine {
 		firstRow, firstRowReadErr := r.Read()
 		if firstRowReadErr != nil {
 			log.Fatal(firstRowReadErr)
 		}
-		ret = append(ret, createInsertLine(&firstRow))
+		maxFieldLen = make([]int, r.FieldsPerRecord)
+		ret = append(ret, createInsertLine(&firstRow, &maxFieldLen, &tableName))
 
 		for i := 0; i < r.FieldsPerRecord; i++ {
-			columnNames = append(columnNames, "[column"+strconv.Itoa(i)+"] VARCHAR(512)")
+			columnNames = append(columnNames, "[column"+strconv.Itoa(i)+"] ")
 		}
 	}
-	createStatement += strings.Join(columnNames, ",") + ")"
+
+	fieldLenInitNeeded := len(maxFieldLen) < 1
 	for {
 		record, err := r.Read()
 		if err == io.EOF {
@@ -74,10 +82,23 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		rowInsert := createInsertLine(&record)
+
+		if fieldLenInitNeeded {
+			maxFieldLen = make([]int, r.FieldsPerRecord)
+			fieldLenInitNeeded = false
+		}
+
+		rowInsert := createInsertLine(&record, &maxFieldLen, &tableName)
 		ret = append(ret, rowInsert)
 	}
+
+	for i := range columnNames {
+		columnNames[i] = columnNames[i] + "VARCHAR(" + strconv.Itoa(maxFieldLen[i]) + ")"
+	}
+
 	ret = append(ret, "SET NOCOUNT OFF;")
+	createStatement += strings.Join(columnNames, ",") + ")"
+
 	var initRows = []string{"SET NOCOUNT ON;", createStatement}
 
 	/// the initRows, ret... seems like a bad idea...
