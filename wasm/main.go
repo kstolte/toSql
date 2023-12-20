@@ -56,14 +56,57 @@ func csvToSqlWrapper() js.Func {
 			fmt.Printf("unable to parse error thrown %s\n", err)
 			return err.Error()
 		}
+
 		return sqlifiedOutPut
 	})
 	return jsonFunc
+}
+
+func handleFileInputParsing() {
+	document := js.Global().Get("document")
+
+	fileInput := document.Call("getElementById", "fileInput")
+	fileOutput := document.Call("getElementById", "sqlOutput")
+
+	fileInput.Set("oninput", js.FuncOf(func(v js.Value, x []js.Value) any {
+		var extension string
+		extension = fileInput.Get("files").Call("item", 0).Get("type").String()
+
+		fileInput.Get("files").Call("item", 0).Call("arrayBuffer").Call("then", js.FuncOf(func(v js.Value, x []js.Value) any {
+			data := js.Global().Get("Uint8Array").New(x[0])
+			dst := make([]byte, data.Get("length").Int())
+			js.CopyBytesToGo(dst, data)
+			hasHeader := document.Call("getElementById", "chkHeaders").Get("checked").Bool()
+
+			var delimeter rune
+			if extension == "text/csv" {
+				delimeter = ','
+			}
+			if extension == "tab-separated-values" {
+				delimeter = '\t'
+			}
+
+			sqlifiedOutPut, err := toSql.CsvToSql(string(dst), toSql.ParseConfig{Delimiter: delimeter, FirstLineIsHeader: hasHeader})
+			if err != nil {
+				fileOutput.Set("value", fmt.Sprintf("unable to parse error thrown %s", err))
+				fmt.Printf("unable to parse error thrown %s\n", err)
+				return err.Error()
+			}
+
+			fileOutput.Set("value", sqlifiedOutPut)
+			return nil
+		}))
+
+		return nil
+	}))
 }
 
 func main() {
 	fmt.Println("Go Web Assembly")
 	js.Global().Set("formatJSON", jsonWrapper())
 	js.Global().Set("tsvToSQLImport", csvToSqlWrapper())
+
+	handleFileInputParsing()
+
 	<-make(chan bool)
 }

@@ -8,7 +8,10 @@
   <script src="wasm_exec.js"></script>
   <script>
     const go = new Go();
-    WebAssembly.instantiateStreaming(fetch("toSql.wasm"), go.importObject).then((result) => {
+    WebAssembly.instantiateStreaming(
+      fetch("toSql.wasm"),
+      go.importObject
+    ).then((result) => {
       go.run(result.instance);
     });
   </script>
@@ -19,23 +22,43 @@
   <div>
     <h1 class="text-2xl">To SQL</h1>
     <h2 class="text-xl">About</h2>
-    <p class="text-base">To SQL is a utility for taking tabulated data sets And easily transforming them into a temp
-      table for ingestion into a SQL server. This can be used to help troubleshoot, or perform various-based comparisons
-      of data sets. This is meant to replace the arguers task of creating a well crafted Excel content function, which
-      can be a bit frustrating when counting all those commas, both function argument separators and inside the insert
-      statement.</p>
-    <p>This project is open source. If you want to request a feature enhancement, report a bug, or help out with a Pull
-      Request <a class="link" href="https://github.com/kstolte/toSql">here</a>.</p>
-    <p class="text-base">DISCLAIMER: This is a work in progress and has not been tested entirely. Use at your own risk.
+    <p class="text-base">
+      To SQL is a utility for taking tabulated data sets And easily
+      transforming them into a temp table for ingestion into a SQL server.
+      This can be used to help troubleshoot, or perform various-based
+      comparisons of data sets. This is meant to replace the arguers task of
+      creating a well crafted Excel content function, which can be a bit
+      frustrating when counting all those commas, both function argument
+      separators and inside the insert statement.
     </p>
-    <p class="text-base">Always check the sql output before executing on an actual server. Sql Injection is a Thing.</p>
+    <p>
+      This project is open source. If you want to request a feature
+      enhancement, report a bug, or help out with a Pull Request
+      <a class="link" href="https://github.com/kstolte/toSql">here</a>.
+    </p>
+    <p class="text-base">
+      DISCLAIMER: This is a work in progress and has not been tested entirely.
+      Use at your own risk.
+    </p>
+    <p class="text-base">
+      Always check the sql output before executing on an actual server. Sql
+      Injection is a Thing.
+    </p>
     <h2 class="text-xl">Known Issues</h2>
     <ul class="list-disc list-inside">
-      <li>Errant &apos; values in the input field - will be mitigated by replacing with an escaped version.</li>
-      <li>No type checking and trying to establish what the appropriate datatype is, right now every thing is a
-        varchar(512)</li>
-      <li>There is no truncation of values to the 512 mark so if there are 1000 characters in a field, that column may
-        have to be adjusted to a higher varchar value - will be mitigating in the future.</li>
+      <li>
+        Errant &apos; values in the input field - will be mitigated by
+        replacing with an escaped version.
+      </li>
+      <li>
+        No type checking and trying to establish what the appropriate datatype
+        is, right now every thing is a varchar(512)
+      </li>
+      <li>
+        There is no truncation of values to the 512 mark so if there are 1000
+        characters in a field, that column may have to be adjusted to a higher
+        varchar value - will be mitigating in the future.
+      </li>
     </ul>
   </div>
   <div>
@@ -55,35 +78,55 @@
 
       <label class="label max-w-md" for="chkHeaders">
         <span class="label-text">First Line Is Headers</span>
-        <input class="checkbox checkbox-primary" id="chkHeaders" name="chkHeaders" type="checkbox">
+        <input class="checkbox checkbox-primary" id="chkHeaders" name="chkHeaders" type="checkbox" />
       </label>
     </div>
-
   </div>
 
   <label for="textdatainput">Data Input</label><br />
   <textarea id="textdatainput" name="textdatainput" cols="100" rows="10" class="textarea textarea-primary font-mono"
-    spellcheck="false"></textarea><br />
+    spellcheck="false"></textarea>
+  <br />
+  <label for="fileInput">Data Input Via File</label><br />
+  <input type="file" id="fileInput" class="file-input file-input-bordered w-full max-w-xs"
+    accept="text/csv,tab-separated-values" />
+  <br />
   <button class="btn btn-primary" id="button" name="button"
     onclick="processTextDataInput(textdatainput.value, inputType.value, chkHeaders.checked)">
-    GIVE ME SQL!</button>
+    GIVE ME SQL!
+  </button>
   <br />
   <label for="sqlOutput">SQLized Output</label><br />
   <textarea id="sqlOutput" name="sqlOutput" cols="100" rows="20" class="textarea textarea-primary font-mono"
     spellcheck="false"></textarea>
+  <button class="btn btn-primary" id="button" name="button" onclick="copyBtn()">
+    Copy Results
+  </button>
 </body>
 <script>
   var processTextDataInput = function (input, inputType, hasHeaders) {
-    var delimiter = '\t'
-    if (inputType === 'csv')
-      delimiter = ','
-    if (inputType === 'scsv')
-      delimiter = ';'
+    var delimiter = "\t";
+    if (inputType === "csv") delimiter = ",";
+    if (inputType === "scsv") delimiter = ";";
 
-    sqlOutput.value = "processing..."
-    var resp = tsvToSQLImport(input, delimiter, hasHeaders)
-    sqlOutput.value = resp !== undefined && resp.length > 1 ? resp : "probable error encountered, refresh page and check for blank input"
-  }
+    sqlOutput.value = "processing...";
+    var resp = tsvToSQLImport(input, delimiter, hasHeaders);
+    sqlOutput.value =
+      resp !== undefined && resp.length > 1
+        ? resp
+        : "probable error encountered, refresh page and check for blank input";
+  };
+  var copyBtn = function () {
+    var copyText = document.getElementById("sqlOutput");
+
+    // Select the text field
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // For mobile devices
+
+    // Copy the text inside the text field
+    navigator.clipboard.writeText(copyText.value);
+
+  };
 </script>
 
 </html>
