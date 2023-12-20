@@ -1,2 +1,4 @@
 out/
 assets/toSql.wasm
+
+.DS_Store

@@ -51,4 +51,3 @@ run tests and update snapshots
 cd ./wasm/toSql
 UPDATE_SNAPS=true go test
 ```
-
