@@ -1,0 +1,10 @@
+
+[Test_SimpleList - 1]
+IN ('a',
+'b',
+'c',
+'d',
+'e'
+)
+
+---

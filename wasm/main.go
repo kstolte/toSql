@@ -62,6 +62,27 @@ func csvToSqlWrapper() js.Func {
 	return jsonFunc
 }
 
+func toInListWrapper() js.Func {
+	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 {
+			return "Invalid number of arguments passed"
+		}
+		inputText := args[0].String()
+		if len(inputText) < 1 {
+			return "empty input field"
+		}
+
+		listifiedOutput, err := toSql.ToInList(inputText)
+		if err != nil {
+			fmt.Printf("unable to parse error thrown %s\n", err)
+			return err.Error()
+		}
+
+		return listifiedOutput
+	})
+	return jsonFunc
+}
+
 func handleFileInputParsing() {
 	document := js.Global().Get("document")
 
@@ -105,6 +126,7 @@ func main() {
 	fmt.Println("Go Web Assembly")
 	js.Global().Set("formatJSON", jsonWrapper())
 	js.Global().Set("tsvToSQLImport", csvToSqlWrapper())
+	js.Global().Set("toInList", toInListWrapper())
 
 	handleFileInputParsing()
 

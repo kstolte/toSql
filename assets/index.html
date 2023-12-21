@@ -13,6 +13,7 @@
       href="https://kit.fontawesome.com/6ac4418141.css"
       crossorigin="anonymous"
     />
+
     <script src="wasm_exec.js"></script>
     <script>
       const go = new Go();
@@ -115,7 +116,7 @@
             name="textdatainput"
             cols="100"
             rows="10"
-            class="textarea"
+            class="textarea is-family-monospace"
             spellcheck="false"
           ></textarea>
         </div>
@@ -144,7 +145,7 @@
             <span class="file-icon">
               <i class="fas fa-upload"></i>
             </span>
-            <span class="file-label"> Choose a file to process... </span>
+            <span class="file-label">Choose a file to process...</span>
           </span>
         </label>
       </div>
@@ -158,7 +159,7 @@
             name="sqlOutput"
             cols="100"
             rows="20"
-            class="textarea font-mono"
+            class="textarea is-family-monospace"
             spellcheck="false"
           ></textarea>
         </div>
@@ -171,6 +172,58 @@
       >
         Copy Results
       </button>
+    </section>
+    <section class="section" id="rowsToInClause">
+      <h3>Rows to IN Clause</h3>
+      <a href="#toc">back to top</a>
+      <p>
+        Takes a line delimited list and outputs the values as an in statement
+        with &apos; wrapping it.
+      </p>
+      <div class="field">
+        <label class="label" for="listDataInput">List Input</label>
+        <div class="control">
+          <textarea
+            id="listDataInput"
+            name="listDataInput"
+            cols="100"
+            rows="10"
+            class="textarea is-family-monospace"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+      <br />
+      <button
+        class="button"
+        id="processToInListInput-btn"
+        name="processToInListInput-btn"
+        onclick="processToInListInput(listDataInput.value)"
+      >
+        Process To List
+      </button>
+      <br />
+      <div class="field">
+        <label class="label" for="listifiedOutput">Listified Output</label>
+        <div class="control">
+          <textarea
+            id="listifiedOutput"
+            name="listifiedOutput"
+            cols="100"
+            rows="20"
+            class="textarea is-family-monospace"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+      <!-- <button
+        class="button"
+        id="copyResults"
+        name="copyResults"
+        onclick="copyBtn()"
+      >
+        Copy Results
+      </button> -->
     </section>
     <footer class="footer">
       <div class="content has-text-centered">
@@ -195,6 +248,15 @@
     </footer>
   </body>
   <script>
+    var processToInListInput = function (input) {
+      listifiedOutput.value = "processing...";
+      var resp = toInList(input);
+      listifiedOutput.value =
+        resp !== undefined && resp.length > 1
+          ? resp
+          : "probable error encountered, refresh page and check for blank input";
+    };
+
     var processTextDataInput = function (input, inputType, hasHeaders) {
       var delimiter = "\t";
       if (inputType === "csv") delimiter = ",";
