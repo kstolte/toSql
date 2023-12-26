@@ -149,7 +149,7 @@ func Test_CommaSeparated_pulitzer(t *testing.T) {
 func Test_CommaSeparated_NationalObesityByState(t *testing.T) {
 	data, testFileReadError := os.ReadFile("testData/National_Obesity_By_State.csv")
 	if testFileReadError != nil {
-		log.Fatal(testFileReadError)
+		log.Fatal("testing Read File", testFileReadError)
 	}
 	in := string(data[:])
 
@@ -161,6 +161,21 @@ func Test_CommaSeparated_NationalObesityByState(t *testing.T) {
 		t.Error("encounterd blank string return value")
 	}
 	snaps.MatchSnapshot(t, got)
+}
+
+func Test_TabSeparated_HasDoubleQuotesUnescaped(t *testing.T) {
+	in := `first_name	last_name	username	test
+Rob	Pike	3" pipe	test
+`
+	got, err := CsvToSql(in, ParseConfig{Delimiter: '\t', FirstLineIsHeader: true, StrictQuotes: true})
+	if err != nil {
+		t.Errorf("received error %d", err)
+	}
+	if got == "" {
+		t.Error("encounterd blank string return value")
+	}
+	// snaps.MatchSnapshot(t, got)
+
 }
 
 func Benchmark_TabSeparated_HasHeader(b *testing.B) {

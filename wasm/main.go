@@ -40,7 +40,7 @@ func jsonWrapper() js.Func {
 
 func csvToSqlWrapper() js.Func {
 	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 3 {
+		if len(args) != 4 {
 			return "Invalid number of arguments passed"
 		}
 		inputJSON := args[0].String()
@@ -50,8 +50,9 @@ func csvToSqlWrapper() js.Func {
 
 		delimiter := []rune(args[1].String())[0]
 		hasHeaderLine := args[2].Truthy()
+		useStrictQuotes := args[3].Truthy()
 
-		sqlifiedOutPut, err := toSql.CsvToSql(inputJSON, toSql.ParseConfig{Delimiter: delimiter, FirstLineIsHeader: hasHeaderLine})
+		sqlifiedOutPut, err := toSql.CsvToSql(inputJSON, toSql.ParseConfig{Delimiter: delimiter, FirstLineIsHeader: hasHeaderLine, StrictQuotes: useStrictQuotes})
 		if err != nil {
 			fmt.Printf("unable to parse error thrown %s\n", err)
 			return err.Error()

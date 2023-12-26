@@ -1,5 +1,4 @@
-// test
-// test
+// core file for processing tabular data into a sql like environment.
 package toSql
 
 import (
@@ -31,7 +30,7 @@ func createInsertLine(recordRow *[]string, maxFieldLen *[]int, tblName *string) 
 type ParseConfig struct {
 	Delimiter         rune `default:"\t"`
 	FirstLineIsHeader bool `default:"true"` // when set to true the first line of the read value will be used as the column names, when this is false it will default to columnN notation
-
+	StrictQuotes      bool `default:"false"`
 }
 
 // Take a input and format it into a CSV document
@@ -39,10 +38,10 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	defer timeTrack(time.Now(), "CsvToSql")
 	tableName := "ttbl"
 	var ret []string
-	// ret = append(ret, "SET NOCOUNT ON")
 
 	r := csv.NewReader(strings.NewReader(input))
 	r.Comma = parseConfig.Delimiter
+	r.LazyQuotes = !parseConfig.StrictQuotes
 	r.Comment = '#'
 
 	hasHeaderLine := parseConfig.FirstLineIsHeader
@@ -52,7 +51,7 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	if hasHeaderLine {
 		headerRecords, headerReadErr := r.Read()
 		if headerReadErr != nil {
-			log.Fatal(headerReadErr)
+			log.Fatal("headerLineReader: ", headerReadErr)
 		}
 		for _, v := range headerRecords {
 			columnNames = append(columnNames, "["+v+"] ")
@@ -63,7 +62,7 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 	if !hasHeaderLine {
 		firstRow, firstRowReadErr := r.Read()
 		if firstRowReadErr != nil {
-			log.Fatal(firstRowReadErr)
+			log.Fatal("firstRowReadErr: ", firstRowReadErr)
 		}
 		maxFieldLen = make([]int, r.FieldsPerRecord)
 		ret = append(ret, createInsertLine(&firstRow, &maxFieldLen, &tableName))
@@ -80,7 +79,7 @@ func CsvToSql(input string, parseConfig ParseConfig) (string, error) {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("readLines: ", err)
 		}
 
 		if fieldLenInitNeeded {
