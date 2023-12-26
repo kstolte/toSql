@@ -100,8 +100,12 @@
 
         <div class="field">
           <div class="control">
-            <label class="label" for="chkHeaders"
-              >First Line Is Headers
+            <label class="label" for="chkHeaders">
+              <span class="label-text">First Line Is Headers</span>
+              <span
+                title="Turns the first detected line into the column names of the output table."
+                ><i class="fas fa-circle-info"></i
+              ></span>
               <input type="checkbox" id="chkHeaders" name="chkHeaders" />
             </label>
           </div>
@@ -126,7 +130,13 @@
       </div>
 
       <div class="field">
-        <label class="label" for="textdatainput">Data Input</label>
+        <label class="label" for="textdatainput">
+          <span class="label-text">Data Input</span>
+          <span
+            title="Copy and paste in the data to be processed into the sql insert statement"
+            ><i class="fas fa-circle-info"></i
+          ></span>
+        </label>
         <div class="control">
           <textarea
             id="textdatainput"
@@ -143,7 +153,7 @@
         class="button"
         id="processDataInputField"
         name="processDataInputField"
-        onclick="processTextDataInput(textdatainput.value, inputType.value, chkHeaders.checked)"
+        onclick="processTextDataInput(textdatainput.value, inputType.value, chkHeaders.checked, chkUseStrictQuotes.checked)"
       >
         GIVE ME SQL!
       </button>
@@ -233,15 +243,15 @@
           ></textarea>
         </div>
       </div>
-      <!-- <button
-        class="button"
-        id="copyResults"
-        name="copyResults"
-        onclick="copyBtn()"
-      >
-        Copy Results
-      </button> -->
     </section>
+    <!-- <br />
+  <hr>
+  <br /> -->
+
+    <!-- <label for="mergeFilesInput">Merge Files</label><br />
+  <input type="file" id="mergeFilesInput" multiple class="" accept="text/csv,tab-separated-values" /> -->
+    <!-- <br />
+  <button id="downloadMergedFiles">Download</button> -->
     <footer class="footer">
       <div class="content has-text-centered">
         <p>
@@ -280,13 +290,18 @@
           : "probable error encountered, refresh page and check for blank input";
     };
 
-    var processTextDataInput = function (input, inputType, hasHeaders) {
+    var processTextDataInput = function (
+      input,
+      inputType,
+      hasHeaders,
+      useStrictQuotes
+    ) {
       var delimiter = "\t";
       if (inputType === "csv") delimiter = ",";
       if (inputType === "scsv") delimiter = ";";
 
       sqlOutput.value = "processing...";
-      var resp = tsvToSQLImport(input, delimiter, hasHeaders);
+      var resp = tsvToSQLImport(input, delimiter, hasHeaders, useStrictQuotes);
       sqlOutput.value =
         resp !== undefined && resp.length > 1
           ? resp
